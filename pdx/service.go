@@ -1,4 +1,6 @@
-package service
+package pdx
+
+import "github.com/bxcodec/go-clean-arch/domain"
 
 type PDFPort interface {
 	Merge(inputFiles []string, outputFile string) error
@@ -15,7 +17,14 @@ func New(pdf PDFPort) *PDXService {
 }
 
 func (s *PDXService) Merge(inputFiles []string, outputFile string) error {
-	return s.pdf.Merge(inputFiles, outputFile)
+	if len(inputFiles) < 2 {
+		return domain.ErrRequireAtLeastTwoFile
+	}
+	err := s.pdf.Merge(inputFiles, outputFile)
+	if err != nil {
+		return domain.ErrCannotMerge
+	}
+	return nil
 }
 
 func (s *PDXService) Split(inputFile string, outputDir string, pageNrs int) error {
