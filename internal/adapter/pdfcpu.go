@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"github.com/bxcodec/go-clean-arch/domain"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
@@ -29,13 +30,13 @@ func (p *PDFCPUAdapter) Compress(inputFile string, outputFile string, level stri
 	conf := model.NewDefaultConfiguration()
 	conf.Optimize = true
 	switch level {
-	case "extreme":
+	case domain.ExtremelyHighCompression:
 		conf.OptimizeResourceDicts = true
 		conf.OptimizeDuplicateContentStreams = true
-	case "recommended":
+	case domain.RecommendedCompressionLevel:
 		conf.OptimizeResourceDicts = true
 		conf.OptimizeDuplicateContentStreams = false
-	case "low":
+	case domain.LowCompression:
 		conf.OptimizeResourceDicts = false
 		conf.OptimizeDuplicateContentStreams = false
 	default:

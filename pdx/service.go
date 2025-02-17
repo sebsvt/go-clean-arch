@@ -1,6 +1,10 @@
 package pdx
 
-import "github.com/bxcodec/go-clean-arch/domain"
+import (
+	"log"
+
+	"github.com/bxcodec/go-clean-arch/domain"
+)
 
 type PDFPort interface {
 	Merge(inputFiles []string, outputFile string) error
@@ -22,15 +26,29 @@ func (s *PDXService) Merge(inputFiles []string, outputFile string) error {
 	}
 	err := s.pdf.Merge(inputFiles, outputFile)
 	if err != nil {
+		log.Println(err)
 		return domain.ErrCannotMerge
 	}
 	return nil
 }
 
 func (s *PDXService) Split(inputFile string, outputDir string, pageNrs int) error {
-	return s.pdf.Split(inputFile, outputDir, pageNrs)
+	if pageNrs < 1 {
+		return domain.ErrRequireAtLeastOnePage
+	}
+	err := s.pdf.Split(inputFile, outputDir, pageNrs)
+	if err != nil {
+		log.Println(err)
+		return domain.ErrCannotSplit
+	}
+	return nil
 }
 
 func (s *PDXService) Compress(inputFile string, outputFile string, level string) error {
-	return s.pdf.Compress(inputFile, outputFile, level)
+	err := s.pdf.Compress(inputFile, outputFile, level)
+	if err != nil {
+		log.Println(err)
+		return domain.ErrCannotCompress
+	}
+	return nil
 }
