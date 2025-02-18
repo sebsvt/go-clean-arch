@@ -2,25 +2,63 @@ package main
 
 import (
 	"log"
+	"os"
+	"strconv"
+	"time"
 
-	"github.com/bxcodec/go-clean-arch/domain"
+	_ "github.com/bxcodec/go-clean-arch/docs"
 	"github.com/bxcodec/go-clean-arch/internal/adapter"
+	"github.com/bxcodec/go-clean-arch/internal/rest/middleware"
 	"github.com/bxcodec/go-clean-arch/pdx"
+	"github.com/labstack/echo/v4"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+const (
+	defaultTimeout = 30
+	defaultAddress = ":9090"
+)
+
+// @title PDF Service API
+// @version 1.0
+// @description API for handling PDF operations such as compression, merging, and splitting.
+// @host localhost:9090
+// @BasePath /api/v1
 func main() {
-	// Initialize the PDF Service
-	pdx_srv := pdx.New(adapter.NewPDFCPUAdapter())
-	err := pdx_srv.Merge([]string{"C:/Users/vithc/Documents/_workspace/go-clean-arch/assets/cv.pdf", "C:/Users/vithc/Documents/_workspace/go-clean-arch/assets/file2.pdf"}, "C:/Users/vithc/Documents/_workspace/go-clean-arch/assets/output.pdf")
+	e := echo.New()
+	e.Use(middleware.CORS)
+
+	// Get context timeout from environment variables
+	timeoutStr := os.Getenv("CONTEXT_TIMEOUT")
+	timeout, err := strconv.Atoi(timeoutStr)
 	if err != nil {
-		log.Println(err)
+		log.Println("failed to parse timeout, using default timeout")
+		timeout = defaultTimeout
 	}
-	err = pdx_srv.Split("C:/Users/vithc/Documents/_workspace/go-clean-arch/assets/output.pdf", "C:/Users/vithc/Documents/_workspace/go-clean-arch/assets/out", 1)
-	if err != nil {
-		log.Println(err)
+	timeoutContext := time.Duration(timeout) * time.Second
+	e.Use(middleware.SetRequestContextWithTimeout(timeoutContext))
+
+	// Healthcheck route for checking if the API is running
+	e.GET("/healthcheck", func(c echo.Context) error {
+		return c.JSON(200, "PDF API IS RUNNING")
+	})
+
+	// Swagger route to serve Swagger UI
+	e.GET("/swagger/*", echo.WrapHandler(httpSwagger.Handler()))
+
+	// Initialize PDF adapter
+	pdfAdapter := adapter.NewPDFCPUAdapter()
+
+	// Build service Layer
+	pdfSvc := pdx.New(pdfAdapter)
+	_ = pdfSvc
+	// Rest route handlers can be added here, such as:
+	// rest.NewPDFHandler(e, pdfSvc)
+
+	// Start the server on the configured address
+	address := os.Getenv("SERVER_ADDRESS")
+	if address == "" {
+		address = defaultAddress
 	}
-	err = pdx_srv.Compress("C:/Users/vithc/Documents/_workspace/go-clean-arch/assets/output.pdf", "C:/Users/vithc/Documents/_workspace/go-clean-arch/assets/output_compressed.pdf", domain.ExtremelyHighCompression)
-	if err != nil {
-		log.Println(err)
-	}
+	log.Fatal(e.Start(address)) //nolint
 }

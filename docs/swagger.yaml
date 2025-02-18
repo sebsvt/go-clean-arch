@@ -1,0 +1,144 @@
+info:
+  contact: {}
+paths:
+  /api/v1/compress:
+    post:
+      consumes:
+      - application/json
+      description: Compress a given PDF file with a specified compression level
+      parameters:
+      - description: Path to input PDF file
+        in: body
+        name: inputFile
+        required: true
+        schema:
+          type: string
+      - description: Path to output compressed PDF file
+        in: body
+        name: outputFile
+        required: true
+        schema:
+          type: string
+      - description: Compression level (low, medium, high)
+        in: body
+        name: level
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Compression successful
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Compression failed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Compress a PDF file
+      tags:
+      - PDF
+  /api/v1/merge:
+    post:
+      consumes:
+      - application/json
+      description: Merge multiple PDF files into a single file
+      parameters:
+      - description: List of input PDF file paths
+        in: body
+        name: inputFiles
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      - description: Path to output merged PDF file
+        in: body
+        name: outputFile
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Merge successful
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Merge failed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Merge multiple PDF files
+      tags:
+      - PDF
+  /api/v1/split:
+    post:
+      consumes:
+      - application/json
+      description: Split a PDF file into multiple parts based on page numbers
+      parameters:
+      - description: Path to input PDF file
+        in: body
+        name: inputFile
+        required: true
+        schema:
+          type: string
+      - description: Path to directory for output split files
+        in: body
+        name: outputDir
+        required: true
+        schema:
+          type: string
+      - description: Number of pages per split file
+        in: body
+        name: pageNrs
+        required: true
+        schema:
+          type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Split successful
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Split failed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Split a PDF file
+      tags:
+      - PDF
+swagger: "2.0"

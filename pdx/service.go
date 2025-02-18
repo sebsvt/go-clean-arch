@@ -2,6 +2,7 @@ package pdx
 
 import (
 	"log"
+	"path/filepath"
 
 	"github.com/bxcodec/go-clean-arch/domain"
 )
@@ -20,16 +21,29 @@ func New(pdf PDFPort) *PDXService {
 	return &PDXService{pdf: pdf}
 }
 
+func resolvePath(path string) string {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		log.Fatalf("Failed to resolve path %s: %v", path, err)
+	}
+	return absPath
+}
+
 /*
-Merge function merges multiple PDF files into a single PDF file.
-The inputFiles parameter is a slice of strings that contains the paths to the PDF files to merge.
-The outputFile parameter is the path to the output PDF file.
+Merge merges multiple PDF files into a single PDF.
 */
 func (s *PDXService) Merge(inputFiles []string, outputFile string) error {
 	if len(inputFiles) < 2 {
 		return domain.ErrRequireAtLeastTwoFile
 	}
-	err := s.pdf.Merge(inputFiles, outputFile)
+
+	absInputFiles := make([]string, len(inputFiles))
+	for i, file := range inputFiles {
+		absInputFiles[i] = resolvePath(file)
+	}
+	absOutputFile := resolvePath(outputFile)
+
+	err := s.pdf.Merge(absInputFiles, absOutputFile)
 	if err != nil {
 		log.Println(err)
 		return domain.ErrCannotMerge
@@ -38,14 +52,17 @@ func (s *PDXService) Merge(inputFiles []string, outputFile string) error {
 }
 
 /*
-Split function splits the PDF file into multiple files with the specified number of pages.
-The pageNrs parameter specifies the number of pages to split the PDF file into.
+Split splits a PDF file into multiple files.
 */
 func (s *PDXService) Split(inputFile string, outputDir string, pageNrs int) error {
 	if pageNrs < 1 {
 		return domain.ErrRequireAtLeastOnePage
 	}
-	err := s.pdf.Split(inputFile, outputDir, pageNrs)
+
+	absInputFile := resolvePath(inputFile)
+	absOutputDir := resolvePath(outputDir)
+
+	err := s.pdf.Split(absInputFile, absOutputDir, pageNrs)
 	if err != nil {
 		log.Println(err)
 		return domain.ErrCannotSplit
@@ -54,17 +71,14 @@ func (s *PDXService) Split(inputFile string, outputDir string, pageNrs int) erro
 }
 
 /*
-Compress function compresses the PDF file with the specified level.
-The level can be one of the following(default is domain.RecommendedCompressionLevel):
-
-- domain.LowCompression (Low optimization)
-
-- domain.RecommendedCompressionLevel (medium optimization)
-
-- domain.ExtremelyHighCompression (high optimization)
+Compress compresses a PDF file with a specified level.
 */
 func (s *PDXService) Compress(inputFile string, outputFile string, level string) error {
-	err := s.pdf.Compress(inputFile, outputFile, domain.ExtremelyHighCompression)
+	// Auto-resolve paths
+	absInputFile := resolvePath(inputFile)
+	absOutputFile := resolvePath(outputFile)
+
+	err := s.pdf.Compress(absInputFile, absOutputFile, level)
 	if err != nil {
 		log.Println(err)
 		return domain.ErrCannotCompress
